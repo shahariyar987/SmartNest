@@ -1,0 +1,12 @@
+# Real WiFi name/password (use secrets.example.h as the template)
+secrets.h
+
+# Arduino build output
+build/
+*.bin
+*.elf
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
