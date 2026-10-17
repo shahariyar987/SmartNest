@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vantage Vision | Live Stream</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0a0e14;
+            color: #e0e0e0;
+        }
+
+        #dashboard-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            height: 100vh;
+        }
+
+        #sidebar {
+            background-color: #161b22;
+            border-right: 2px solid #30363d;
+            padding: 20px;
+        }
+
+        #main-viewport {
+            padding: 40px;
+            background: radial-gradient(circle, #1c2128 0%, #0a0e14 100%);
+        }
+
+        #stream-window {
+            background-color: #000;
+            border: 1px solid #58a6ff;
+            box-shadow: 0 0 20px rgba(88, 166, 255, 0.2);
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        #stream-window img {
+            width: 100%;
+            display: block;
+        }
+
+        h2 { color: #58a6ff; font-weight: 400; margin-bottom: 30px; }
+        
+        #status-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #status-table td {
+            padding: 10px 5px;
+            border-bottom: 1px solid #30363d;
+            font-size: 0.9em;
+        }
+
+        .label { color: #8b949e; }
+        .value { text-align: right; color: #79c0ff; font-family: monospace; }
+
+        button {
+            width: 100%;
+            background-color: #238636;
+            color: white;
+            border: none;
+            padding: 12px;
+            margin-top: 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover { background-color: #2ea043; }
+    </style>
+</head>
+<body>
+
+<div id="dashboard-container">
+    <aside id="sidebar">
+        <h2>VANTAGE VISION</h2>
+        <table id="status-table">
+            <tr>
+                <td class="label">System Status:</td>
+                <td class="value" style="color: #3fb950;">ACTIVE</td>
+            </tr>
+            <tr>
+                <td class="label">Resolution:</td>
+                <td class="value">VGA (640x480)</td>
+            </tr>
+            <tr>
+                <td class="label">Device:</td>
+                <td class="value">ESP32-CAM</td>
+            </tr>
+        </table>
+        
+        <button onclick="location.reload()">REFRESH FEED</button>
+        <button style="background-color: #da3633; margin-top: 10px;">REBOOT SYSTEM</button>
+    </aside>
+
+    <main id="main-viewport">
+        <div id="stream-window">
+            <!-- The :81/stream endpoint is standard for ESP32-CAM -->
+            <img src="http://[YOUR_IP_ADDRESS]:81/stream" alt="Live Feed">
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

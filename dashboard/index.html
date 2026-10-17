@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartNest Dashboard</title>
+<style>
+/* ══════════════════════════════════════════════════
+   RESET & VARIABLES
+══════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:        #0b0f1a;
+  --bg2:       #111827;
+  --bg3:       #1a2235;
+  --bg4:       #1e2d45;
+  --panel:     #131c2e;
+  --border:    rgba(80,120,180,0.15);
+  --border2:   rgba(80,120,180,0.3);
+  --accent:    #3b82f6;
+  --a2:        #60a5fa;
+  --green:     #10b981;
+  --yellow:    #f59e0b;
+  --red:       #ef4444;
+  --purple:    #8b5cf6;
+  --cyan:      #06b6d4;
+  --txt:       #e2e8f0;
+  --txt2:      #94a3b8;
+  --txt3:      #4b6082;
+  --mono:      'Courier New',monospace;
+  --sans:      system-ui,-apple-system,sans-serif;
+  --r:4px;--r2:8px;--r3:12px;--r4:16px;
+}
+html{font-size:14px}
+body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px}
+
+/* ══════════════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════════════ */
+.app{display:grid;grid-template-columns:200px 1fr;grid-template-rows:52px 1fr;min-height:100vh}
+
+/* ══════════════════════════════════════════════════
+   TOPBAR
+══════════════════════════════════════════════════ */
+.topbar{
+  grid-column:1/-1;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.25rem;
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;
+  gap:10px;
+}
+.logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.logo-icon{width:28px;height:28px;border-radius:var(--r2);background:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 0 16px rgba(59,130,246,.4)}
+.logo-txt{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.06em}
+.logo-txt span{color:var(--a2)}
+.tb-pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;
+  border:1px solid var(--border);background:var(--bg3);font-size:11px;
+  color:var(--txt2);font-family:var(--mono)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;animation:blink 2s infinite}
+.dot.g{background:var(--green)}
+.dot.r{background:var(--red)}
+.dot.y{background:var(--yellow)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.tb-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.clock{font-family:var(--mono);font-size:12px;color:var(--txt2);
+  padding:3px 9px;border:1px solid var(--border);border-radius:var(--r2);background:var(--bg3)}
+.alert-count{padding:3px 9px;border-radius:20px;font-size:11px;font-family:var(--mono);
+  background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+
+/* ══════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════ */
+.sidebar{
+  background:var(--panel);border-right:1px solid var(--border);
+  padding:.75rem 0;display:flex;flex-direction:column;gap:2px;overflow-y:auto
+}
+.sb-section{padding:.75rem .75rem .25rem;font-size:9px;font-family:var(--mono);
+  color:var(--txt3);letter-spacing:.1em;text-transform:uppercase}
+.nav{display:flex;align-items:center;gap:9px;padding:.5rem .75rem;
+  color:var(--txt2);font-size:12.5px;cursor:pointer;border-left:2px solid transparent;
+  margin:1px 4px;border-radius:var(--r2);transition:all .15s}
+.nav:hover{background:var(--bg3);color:var(--txt)}
+.nav.active{background:rgba(59,130,246,.1);color:var(--a2);
+  border-left-color:var(--accent);font-weight:500}
+.nav-ic{width:15px;text-align:center;font-size:12px;flex-shrink:0}
+.nav-badge{margin-left:auto;font-size:10px;font-family:var(--mono);
+  padding:1px 5px;border-radius:8px;background:rgba(239,68,68,.15);color:var(--red)}
+.nav-badge.ok{background:rgba(16,185,129,.12);color:var(--green)}
+.dev-row{display:flex;align-items:center;gap:7px;padding:.35rem .85rem;
+  font-size:11px;color:var(--txt3)}
+.dev-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.conn-url{font-family:var(--mono);font-size:9px;color:var(--txt3);
+  padding:.25rem .85rem;word-break:break-all}
+
+/* ══════════════════════════════════════════════════
+   MAIN / PAGES
+══════════════════════════════════════════════════ */
+.main{overflow-y:auto;background:var(--bg)}
+.page{display:none;padding:1.25rem}
+.page.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ══════════════════════════════════════════════════
+   TYPOGRAPHY / LABELS
+══════════════════════════════════════════════════ */
+.page-title{font-size:18px;font-weight:500;margin-bottom:.2rem}
+.page-sub{font-size:11px;color:var(--txt3);font-family:var(--mono);margin-bottom:1rem}
+.sec{font-size:11px;font-weight:600;color:var(--txt3);font-family:var(--mono);
+  letter-spacing:.08em;text-transform:uppercase;
+  display:flex;align-items:center;gap:8px;margin:.9rem 0 .5rem}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ══════════════════════════════════════════════════
+   CARDS
+══════════════════════════════════════════════════ */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r4);padding:1.1rem}
+.card-sm{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r3);padding:.75rem 1rem}
+.card-lbl{font-size:10px;color:var(--txt3);font-family:var(--mono);
+  letter-spacing:.06em;text-transform:uppercase;margin-bottom:.3rem;display:flex;align-items:center;gap:5px}
+.card-val{font-size:24px;font-weight:500;font-family:var(--mono);line-height:1.1}
+.card-sub{font-size:10px;color:var(--txt3);margin-top:3px}
+
+/* accent top bar */
+.card-sm.blue::before,.card-sm.green::before,.card-sm.yellow::before,
+.card-sm.red::before,.card-sm.purple::before{
+  content:'';display:block;height:2px;margin:-0.75rem -1rem 0.5rem;border-radius:var(--r3) var(--r3) 0 0}
+.card-sm.blue::before{background:var(--accent)}
+.card-sm.green::before{background:var(--green)}
+.card-sm.yellow::before{background:var(--yellow)}
+.card-sm.red::before{background:var(--red)}
+.card-sm.purple::before{background:var(--purple)}
+
+/* ══════════════════════════════════════════════════
+   GRIDS
+══════════════════════════════════════════════════ */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+
+/* ══════════════════════════════════════════════════
+   BADGE
+══════════════════════════════════════════════════ */
+.badge{display:inline-flex;align-items:center;gap:3px;
+  padding:2px 7px;border-radius:20px;font-size:9.5px;font-family:var(--mono);font-weight:700}
+.badge.ok  {background:rgba(16,185,129,.12);color:var(--green);border:1px solid rgba(16,185,129,.25)}
+.badge.warn{background:rgba(245,158,11,.12);color:var(--yellow);border:1px solid rgba(245,158,11,.25)}
+.badge.err {background:rgba(239,68,68,.12); color:var(--red);  border:1px solid rgba(239,68,68,.25)}
+.badge.info{background:rgba(59,130,246,.12);color:var(--a2);   border:1px solid rgba(59,130,246,.25)}
+.badge.gray{background:var(--bg4);color:var(--txt3);border:1px solid var(--border)}
+
+/* ══════════════════════════════════════════════════
+   SENSOR ROW
+══════════════════════════════════════════════════ */
+.srow{display:flex;align-items:center;gap:9px;padding:.5rem 0;border-bottom:1px solid var(--border)}
+.srow:last-child{border-bottom:none}
+.sic{width:30px;height:30px;border-radius:var(--r2);display:flex;align-items:center;
+  justify-content:center;font-size:13px;flex-shrink:0}
+.sic.g{background:rgba(16,185,129,.12);color:var(--green)}
+.sic.y{background:rgba(245,158,11,.12);color:var(--yellow)}
+.sic.r{background:rgba(239,68,68,.12); color:var(--red)}
+.sic.b{background:rgba(59,130,246,.12);color:var(--a2)}
+.sic.d{background:var(--bg4);color:var(--txt3);border:1px solid var(--border)}
+.sic.p{background:rgba(139,92,246,.12);color:var(--purple)}
+.sbody{flex:1;min-width:0}
+.sname{font-size:12.5px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.sdet{font-size:10px;color:var(--txt3);font-family:var(--mono);margin-top:2px}
+.bar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;margin-top:5px}
+.bar-f{height:100%;border-radius:2px;transition:width 1s ease}
+
+/* ══════════════════════════════════════════════════
+   TOGGLE
+══════════════════════════════════════════════════ */
+.sw-row{display:flex;align-items:center;justify-content:space-between;
+  padding:.5rem 0;border-bottom:1px solid var(--border)}
+.sw-row:last-child{border-bottom:none}
+.sw-left{display:flex;align-items:center;gap:8px}
+.sw-lbl{font-size:12.5px}
+.sw-sub{font-size:10px;color:var(--txt3);font-family:var(--mono);margin-top:1px}
+.sw-icon{width:28px;height:28px;border-radius:var(--r2);display:flex;align-items:center;
+  justify-content:center;font-size:12px;flex-shrink:0}
+.toggle{position:relative;width:36px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.ttrack{position:absolute;inset:0;border-radius:10px;background:var(--bg4);
+  border:1px solid var(--border2);cursor:pointer;transition:all .2s}
+.toggle input:checked + .ttrack{background:var(--accent);border-color:var(--accent);
+  box-shadow:0 0 12px rgba(59,130,246,.35)}
+.tthumb{position:absolute;top:3px;left:3px;width:14px;height:14px;
+  border-radius:50%;background:#fff;transition:transform .2s;pointer-events:none}
+.toggle input:checked ~ .tthumb{transform:translateX(16px)}
+
+/* ══════════════════════════════════════════════════
+   CAMERA & LIVE FEED
+══════════════════════════════════════════════════ */
+.cam-wrap{background:#060a12;border-radius:var(--r3);border:1px solid var(--border);
+  overflow:hidden;position:relative;aspect-ratio:16/9}
+.cam-off{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;color:var(--txt3);font-size:12px}
+.cam-off .big-ic{font-size:32px;opacity:.3}
+.cam-statusbar{position:absolute;top:7px;left:7px;right:7px;
+  display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+.cam-tag{background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+  padding:2px 7px;border-radius:3px;font-size:10px;font-family:var(--mono);color:var(--txt2)}
+.cam-rec{display:flex;align-items:center;gap:4px;background:rgba(239,68,68,.85);
+  padding:2px 7px;border-radius:3px;font-size:10px;font-family:var(--mono);color:#fff}
+.cam-recdot{width:5px;height:5px;border-radius:50%;background:#fff;animation:blink .9s infinite}
+.cam-ctrls{position:absolute;bottom:7px;left:7px;right:7px;display:flex;
+  align-items:center;justify-content:space-between;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(6px);
+  border-radius:var(--r2);padding:5px 9px;border:1px solid rgba(255,255,255,.07)}
+.cam-url{font-family:var(--mono);font-size:9px;color:var(--txt3)}
+.cam-btn-group{display:flex;gap:3px}
+.cam-btn{background:none;border:none;color:var(--txt2);font-size:12px;cursor:pointer;
+  padding:3px 5px;border-radius:3px;transition:all .15s}
+.cam-btn:hover{background:rgba(255,255,255,.08);color:var(--txt)}
+.live-badge{display:inline-flex;align-items:center;gap:4px;
+  background:rgba(239,68,68,.15);color:var(--red);
+  border:1px solid rgba(239,68,68,.3);
+  padding:2px 7px;border-radius:3px;font-size:10px;font-family:var(--mono);font-weight:700}
+.scan{position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(to bottom,transparent 0,transparent 3px,
+  rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px)}
+
+/* ══════════════════════════════════════════════════
+   ALERT ITEMS & NFC
+══════════════════════════════════════════════════ */
+.aitem{display:flex;align-items:flex-start;gap:9px;padding:.55rem .8rem;
+  border-radius:var(--r3);margin-bottom:5px;border:1px solid;font-size:12px}
+.nfc-row{display:flex;align-items:center;gap:9px;padding:.45rem 0;border-bottom:1px solid var(--border)}
+.nfc-row:last-child{border-bottom:none}
+.nfc-ic{width:30px;height:30px;border-radius:var(--r2);
+  background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);
+  display:flex;align-items:center;justify-content:center;color:var(--a2);font-size:12px;flex-shrink:0}
+.nfc-id{font-family:var(--mono);font-size:12px}
+.nfc-sub{font-size:10px;color:var(--txt3);margin-top:1px}
+
+/* ══════════════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════════════ */
+.btn{padding:5px 12px;border-radius:var(--r2);border:1px solid var(--border2);
+  background:var(--bg3);color:var(--txt2);font-size:12px;cursor:pointer;
+  transition:all .15s;display:inline-flex;align-items:center;gap:5px;font-family:var(--sans)}
+.btn:hover{background:var(--bg4);color:var(--txt)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);
+  box-shadow:0 0 12px rgba(59,130,246,.3)}
+
+/* ══════════════════════════════════════════════════
+   LOG ITEMS
+══════════════════════════════════════════════════ */
+.log-item{display:flex;align-items:flex-start;gap:9px;padding:.5rem 0;border-bottom:1px solid var(--border)}
+.log-item:last-child{border-bottom:none}
+.log-ic{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;
+  justify-content:center;font-size:10px;flex-shrink:0;margin-top:1px}
+.log-msg{flex:1;font-size:12px}
+.log-room{font-family:var(--mono);font-size:10px;margin-right:4px}
+.log-cat{font-family:var(--mono);font-size:9px;color:var(--txt3);margin-top:2px}
+.log-time{font-family:var(--mono);font-size:10px;color:var(--txt3);white-space:nowrap;margin-top:1px}
+
+/* ══════════════════════════════════════════════════
+   STATUS INDICATOR
+══════════════════════════════════════════════════ */
+.status-row{display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;padding:.3rem 0}
+.status-lbl{color:var(--txt2)}
+.status-val{font-family:var(--mono);font-weight:600}
+.sv-ok{color:var(--green)}.sv-warn{color:var(--yellow)}.sv-err{color:var(--red)}
+
+/* ══════════════════════════════════════════════════
+   CONNECTION BANNER
+══════════════════════════════════════════════════ */
+.conn-banner{
+  background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);
+  border-radius:var(--r3);padding:.75rem 1rem;margin-bottom:.75rem;
+  font-size:12px;display:flex;align-items:center;gap:8px;color:var(--a2)}
+.conn-banner.warn{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.2);color:var(--yellow)}
+
+/* ══════════════════════════════════════════════════
+   IP CONFIG PANEL
+══════════════════════════════════════════════════ */
+.ip-form{display:flex;gap:8px;margin-bottom:.75rem;flex-wrap:wrap}
+.ip-inp{flex:1;min-width:150px;padding:5px 10px;border-radius:var(--r2);
+  border:1px solid var(--border2);background:var(--bg3);color:var(--txt);
+  font-family:var(--mono);font-size:12px;outline:none}
+.ip-inp:focus{border-color:var(--accent)}
+.ip-lbl{font-size:11px;color:var(--txt3);margin-bottom:4px;display:block}
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════ */
+@media(max-width:860px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .g4{grid-template-columns:1fr 1fr}
+  .g2{grid-template-columns:1fr}
+}
+@media(max-width:500px){
+  .page{padding:.75rem}
+  .g4{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🏠</div>
+    <span class="logo-txt">Smart<span>Nest</span></span>
+  </div>
+  <div class="tb-pills">
+    <div class="pill"><div class="dot g" id="r1-dot"></div><span id="r1-status">R1 — connecting</span></div>
+    <div class="pill"><div class="dot g" id="r2-dot"></div><span id="r2-status">R2 — connecting</span></div>
+  </div>
+  <div class="tb-right">
+    <div class="alert-count" id="alert-count">0 alerts</div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<nav class="sidebar">
+  <div class="sb-section">Navigation</div>
+  <div class="nav active" onclick="showPage('overview',this)"><span class="nav-ic">📊</span>Overview</div>
+  <div class="nav" onclick="showPage('room1',this)"><span class="nav-ic">📡</span>Room 1 — ESP32</div>
+  <div class="nav" onclick="showPage('room2',this)"><span class="nav-ic">📡</span>Room 2 — ESP32</div>
+  <div class="nav" onclick="showPage('stream',this)"><span class="nav-ic">🎥</span>Live Stream</div>
+  <div class="nav" onclick="showPage('security',this)"><span class="nav-ic">🔒</span>Security <span class="nav-badge" id="sec-badge"></span></div>
+  <div class="nav" onclick="showPage('logs',this)"><span class="nav-ic">📋</span>Event Log</div>
+  <div class="nav" onclick="showPage('setup',this)"><span class="nav-ic">⚙️</span>Setup / Config</div>
+
+  <div class="sb-section" style="margin-top:.5rem">Devices</div>
+  <div class="dev-row"><div class="dev-dot" id="d1-dot" style="background:var(--green)"></div>ESP32 Room 1</div>
+  <div class="dev-row"><div class="dev-dot" id="d2-dot" style="background:var(--green)"></div>ESP32 Room 2</div>
+  <div class="sb-section">Endpoints</div>
+  <div class="conn-url" id="sb-r1-url">R1: not set</div>
+  <div class="conn-url" id="sb-r2-url">R2: not set</div>
+  <div class="conn-url" id="sb-cam-url">CAM: not set</div>
+</nav>
+
+<main class="main">
+
+<div id="page-overview" class="page active">
+  <div class="page-title">Overview</div>
+  <div class="page-sub" id="ov-date">Loading…</div>
+
+  <div class="conn-banner warn" id="conn-banner">
+    ⚙️ Set your IP addresses in <strong>Setup / Config</strong> to start receiving data.
+  </div>
+
+  <div class="g4" style="margin-bottom:.75rem">
+    <div class="card-sm blue">
+      <div class="card-lbl">🌡 R1 Temp</div>
+      <div class="card-val" id="ov-r1-temp">—</div>
+      <div class="card-sub">Room 1 DHT11</div>
+    </div>
+    <div class="card-sm blue">
+      <div class="card-lbl">🌡 R2 Temp</div>
+      <div class="card-val" id="ov-r2-temp">—</div>
+      <div class="card-sub">Room 2 DHT11</div>
+    </div>
+    <div class="card-sm green">
+      <div class="card-lbl">💧 R1 Humidity</div>
+      <div class="card-val" id="ov-r1-hum">—</div>
+      <div class="card-sub">Room 1</div>
+    </div>
+    <div class="card-sm green">
+      <div class="card-lbl">💧 R2 Humidity</div>
+      <div class="card-val" id="ov-r2-hum">—</div>
+      <div class="card-sub">Room 2</div>
+    </div>
+  </div>
+
+  <div class="g2" style="margin-bottom:.75rem">
+    <div class="card">
+      <div class="sec">⚠️ Active alerts</div>
+      <div id="ov-alerts"></div>
+    </div>
+    <div class="card" style="padding:.9rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+        <div style="font-weight:500;font-size:13px">🎥 Live Camera</div>
+        <span class="live-badge"><div class="cam-recdot"></div>LIVE</span>
+      </div>
+      <div class="cam-wrap" style="aspect-ratio:16/9">
+        <img id="cam-preview" src="" style="width:100%;height:100%;object-fit:cover;display:none" onerror="this.style.display='none'">
+        <div class="cam-off" id="cam-preview-off">
+          <span class="big-ic">📷</span>
+          <span>Connect ESP32-CAM in Setup</span>
+        </div>
+        <div class="scan"></div>
+        <div class="cam-statusbar">
+          <span class="cam-tag">ESP32-CAM</span>
+          <span class="cam-rec"><div class="cam-recdot"></div>REC</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card" style="cursor:pointer;border-color:rgba(59,130,246,.2)"
+      onclick="showPage('room1',document.querySelectorAll('.nav')[1])">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
+        <div>
+          <div style="font-size:9px;color:var(--txt3);font-family:var(--mono)">ROOM 01 · ESP32</div>
+          <div style="font-weight:500">Room 1</div>
+        </div>
+        <span class="badge err" id="r1-badge">—</span>
+      </div>
+      <div class="g2" style="gap:6px;margin-bottom:.5rem">
+        <div class="card-sm" style="padding:.5rem .7rem">
+          <div class="card-lbl">Temp</div>
+          <div style="font-size:18px;font-weight:500;font-family:var(--mono)" id="r1-temp-ov">—</div>
+        </div>
+        <div class="card-sm" style="padding:.5rem .7rem">
+          <div class="card-lbl">Humidity</div>
+          <div style="font-size:18px;font-weight:500;font-family:var(--mono)" id="r1-hum-ov">—</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="badge info" id="r1-gas-badge">Gas —</span>
+        <span class="badge gray" id="r1-flame-badge">Flame —</span>
+        <span class="badge gray" id="r1-motion-badge">PIR —</span>
+        <span class="badge gray" id="r1-rain-badge">Rain —</span>
+      </div>
+    </div>
+
+    <div class="card" style="cursor:pointer;border-color:rgba(139,92,246,.2)"
+      onclick="showPage('room2',document.querySelectorAll('.nav')[2])">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
+        <div>
+          <div style="font-size:9px;color:var(--txt3);font-family:var(--mono)">ROOM 02 · ESP32</div>
+          <div style="font-weight:500">Room 2</div>
+        </div>
+        <span class="badge warn" id="r2-badge">—</span>
+      </div>
+      <div class="g2" style="gap:6px;margin-bottom:.5rem">
+        <div class="card-sm" style="padding:.5rem .7rem">
+          <div class="card-lbl">Temp</div>
+          <div style="font-size:18px;font-weight:500;font-family:var(--mono)" id="r2-temp-ov">—</div>
+        </div>
+        <div class="card-sm" style="padding:.5rem .7rem">
+          <div class="card-lbl">Humidity</div>
+          <div style="font-size:18px;font-weight:500;font-family:var(--mono)" id="r2-hum-ov">—</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="badge info" id="r2-gas-badge">Gas —</span>
+        <span class="badge gray" id="r2-flame-badge">Flame —</span>
+        <span class="badge gray" id="r2-motion-badge">PIR —</span>
+        <span class="badge gray" id="r2-rain-badge">Rain —</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="page-room1" class="page">
+  <div class="page-title">Room 1 <span class="badge info" style="font-size:11px;margin-left:6px">ESP32</span></div>
+  <div class="page-sub" id="r1-ip-disp">IP: not configured</div>
+
+  <div class="g2" style="margin-bottom:.75rem">
+    <div class="card">
+      <div class="sec">🌡 Environment</div>
+      <div class="g2" style="gap:8px;margin-bottom:.75rem">
+        <div class="card-sm blue"><div class="card-lbl">Temperature</div><div class="card-val" id="r1-temp">—</div></div>
+        <div class="card-sm green"><div class="card-lbl">Humidity</div><div class="card-val" id="r1-hum">—</div></div>
+      </div>
+      <div class="sec">🔬 Sensors</div>
+      <div class="srow">
+        <div class="sic r" id="r1-gas-ic">💨</div>
+        <div class="sbody">
+          <div class="sname">Gas / Smoke (MQ2) <strong id="r1-gas">—</strong></div>
+          <div class="bar"><div class="bar-f" id="r1-gas-bar" style="width:0%;background:var(--green)"></div></div>
+          <div class="sdet">GPIO 34 · Threshold: 400</div>
+        </div>
+      </div>
+      <div class="srow">
+        <div class="sic g" id="r1-flame-ic">🔥</div>
+        <div class="sbody">
+          <div class="sname">Flame Sensor <span id="r1-flame-lbl" style="color:var(--green)">Clear</span></div>
+          <div class="sdet">GPIO 35 · Active LOW</div>
+        </div>
+      </div>
+      <div class="srow">
+        <div class="sic d" id="r1-pir-ic">🚶</div>
+        <div class="sbody">
+          <div class="sname">PIR Motion <span id="r1-pir-lbl" style="color:var(--txt3)">No motion</span></div>
+          <div class="sdet">GPIO 32</div>
+        </div>
+      </div>
+      <div class="srow">
+        <div class="sic g" id="r1-rain-ic">🌧</div>
+        <div class="sbody">
+          <div class="sname">Rain Sensor <span id="r1-rain-lbl" style="color:var(--green)">Dry</span></div>
+          <div class="bar"><div class="bar-f" id="r1-rain-bar" style="width:0%;background:var(--cyan)"></div></div>
+          <div class="sdet">GPIO 33 · Analog</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec">🔌 Power Control</div>
+      <div class="sw-row">
+        <div class="sw-left">
+          <div class="sw-icon sic b">💡</div>
+          <div><div class="sw-lbl">Main Light</div><div class="sw-sub">Relay 1 · GPIO 26</div></div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="r1-sw1" onchange="sendCmd('1','r1',this.checked)"><div class="ttrack"></div><div class="tthumb"></div></label>
+      </div>
+      <div class="sw-row">
+        <div class="sw-left">
+          <div class="sw-icon sic g">🌪</div>
+          <div><div class="sw-lbl">Exhaust Fan</div><div class="sw-sub">Relay 2 · GPIO 27</div></div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="r1-sw2" onchange="sendCmd('2','r1',this.checked)"><div class="ttrack"></div><div class="tthumb"></div></label>
+      </div>
+      <div class="sw-row">
+        <div class="sw-left">
+          <div class="sw-icon sic y">⚡</div>
+          <div><div class="sw-lbl">Smart Outlet</div><div class="sw-sub">Relay 3 · GPIO 14</div></div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="r1-sw3" onchange="sendCmd('3','r1',this.checked)"><div class="ttrack"></div><div class="tthumb"></div></label>
+      </div>
+      <div class="sw-row">
+        <div class="sw-left">
+          <div class="sw-icon sic r">🔊</div>
+          <div><div class="sw-lbl">Alarm Buzzer</div><div class="sw-sub">Transistor · GPIO 25</div></div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="r1-buzz" onchange="sendCmd('buzz','r1',this.checked)"><div class="ttrack"></div><div class="tthumb"></div></label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="page-room2" class="page">
+  <div class="page-title">Room 2 <span class="badge warn" style="font-size:11px;margin-left:6px">ESP32</span></div>
+  <div class="page-sub" id="r2-ip-disp">IP: not configured</div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="sec">🔬 Sensors — Room 2</div>
+      <div class="g2" style="gap:8px;margin-bottom:.75rem">
+        <div class="card-sm blue"><div class="card-lbl">Temperature</div><div class="card-val" id="r2-temp">—</div></div>
+        <div class="card-sm green"><div class="card-lbl">Humidity</div><div class="card-val" id="r2-hum">—</div></div>
+      </div>
+      <div class="srow">
+        <div class="sic r" id="r2-gas-ic">💨</div>
+        <div class="sbody">
+          <div class="sname">Gas (MQ2) <strong id="r2-gas">—</strong></div>
+          <div class="sdet">GPIO 27 · Alert if > 400</div>
+        </div>
+      </div>
+      <div class="srow">
+        <div class="sic d" id="r2-pir-ic">🚶</div>
+        <div class="sbody">
+          <div class="sname">Motion (PIR) <span id="r2-pir-lbl" style="color:var(--txt3)">No motion</span></div>
+          <div class="sdet">GPIO 13</div>
+        </div>
+      </div>
+      <div class="srow">
+        <div class="sic g" id="r2-flame-ic">🔥</div>
+        <div class="sbody">
+          <div class="sname">Flame Sensor <span id="r2-flame-lbl" style="color:var(--green)">Clear</span></div>
+          <div class="sdet">GPIO 14</div>
+        </div>
+      </div>
+      <div class="srow">
+        <div class="sic g" id="r2-rain-ic">🌧</div>
+        <div class="sbody">
+          <div class="sname">Rain Sensor <span id="r2-rain-lbl" style="color:var(--green)">Dry</span></div>
+          <div class="sdet">GPIO 33</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec">🔌 Power Control — Room 2</div>
+      <div class="sw-row">
+        <div class="sw-left">
+          <div class="sw-icon sic b">💡</div>
+          <div><div class="sw-lbl">Room 2 Light</div><div class="sw-sub">Relay 1 · GPIO 26</div></div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="r2-sw1" onchange="sendCmd('1','r2',this.checked)"><div class="ttrack"></div><div class="tthumb"></div></label>
+      </div>
+      <div class="sw-row">
+        <div class="sw-left">
+          <div class="sw-icon sic g">🌪</div>
+          <div><div class="sw-lbl">Room 2 Fan</div><div class="sw-sub">Relay 2 · GPIO 25</div></div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="r2-sw2" onchange="sendCmd('2','r2',this.checked)"><div class="ttrack"></div><div class="tthumb"></div></label>
+      </div>
+      <div class="sw-row">
+        <div class="sw-left">
+          <div class="sw-icon sic y">⚡</div>
+          <div><div class="sw-lbl">Room 2 Outlet</div><div class="sw-sub">Relay 3 · GPIO 12</div></div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="r2-sw3" onchange="sendCmd('3','r2',this.checked)"><div class="ttrack"></div><div class="tthumb"></div></label>
+      </div>
+      <div class="sw-row">
+        <div class="sw-left">
+          <div class="sw-icon sic r">🔊</div>
+          <div><div class="sw-lbl">Room 2 Alarm</div><div class="sw-sub">Transistor · GPIO 16</div></div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="r2-buzz" onchange="sendCmd('buzz','r2',this.checked)"><div class="ttrack"></div><div class="tthumb"></div></label>
+      </div>
+      <div class="sw-row">
+        <div class="sw-left">
+          <div class="sw-icon sic p">🔦</div>
+          <div><div class="sw-lbl">Room 2 Flash LED</div><div class="sw-sub">LED · GPIO 17</div></div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="r2-flash" onchange="sendCmd('flash','r2',this.checked)"><div class="ttrack"></div><div class="tthumb"></div></label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="page-stream" class="page">
+  <div class="page-title">Live Stream <span class="badge info" style="font-size:11px;margin-left:6px">ESP32-CAM</span></div>
+  <div class="page-sub" id="cam-ip-disp">IP: not configured</div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+      <div class="sec" style="margin:0">🎥 Live Camera Feed</div>
+      <div style="display:flex;gap:5px">
+        <button class="btn" onclick="camFullscreen()">⛶ Fullscreen</button>
+        <button class="btn" onclick="snapCam()">📸 Snapshot</button>
+        <button class="btn" onclick="sendCmd('flash', 'cam')">🔦 Cam Flash</button>
+      </div>
+    </div>
+    <div class="cam-wrap" style="max-height:500px">
+      <img id="cam-stream" src="" style="width:100%;height:100%;object-fit:cover;display:none" 
+           onload="document.getElementById('cam-off').style.display='none'" 
+           onerror="this.style.display='none';document.getElementById('cam-off').style.display='flex'">
+      <div class="cam-off" id="cam-off">
+        <span class="big-ic">📷</span>
+        <div style="font-size:11px;text-align:center">Stream not connected.<br>Set your Camera IP in Setup.</div>
+        <button class="btn primary" onclick="showPage('setup',document.querySelectorAll('.nav')[6])">Go to Setup →</button>
+      </div>
+      <div class="scan"></div>
+      <div class="cam-statusbar">
+        <span class="cam-tag" id="cam-ip-tag">ESP32-CAM</span>
+        <span class="cam-rec"><div class="cam-recdot"></div>REC</span>
+      </div>
+      <div class="cam-ctrls">
+        <span class="cam-url" id="cam-url-disp">http://x.x.x.x:81/stream</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="page-security" class="page">
+  <div class="page-title">Security</div>
+  <div class="page-sub">Gate · NFC · Laser · Motion · Alarms</div>
+  <div class="card">
+    <div class="sec">🚨 Active Security Monitors</div>
+    <div class="g2" style="gap:8px">
+      <div class="card-sm red"><div class="card-lbl">🔥 Flame Detect</div><div style="font-size:12px" id="sec-flame">Clear</div></div>
+      <div class="card-sm red"><div class="card-lbl">💨 Gas Detect</div><div style="font-size:12px" id="sec-gas">Clear</div></div>
+      <div class="card-sm yellow"><div class="card-lbl">🚶 Motion</div><div style="font-size:12px" id="sec-pir">No motion</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="page-logs" class="page">
+  <div class="page-title">Event Log</div>
+  <div class="page-sub">System events and alerts</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <select id="log-filter" style="background:var(--bg3);border:1px solid var(--border);color:var(--txt);padding:4px 8px;border-radius:4px;outline:none" onchange="renderLog()">
+        <option value="all">All Events</option>
+        <option value="alert">Alerts Only</option>
+        <option value="security">Security Only</option>
+        <option value="control">Control Log</option>
+      </select>
+      <button class="btn" onclick="logs=[];renderLog()">Clear Log</button>
+    </div>
+    <div id="log-container" style="padding:0 1rem;max-height:600px;overflow-y:auto"></div>
+  </div>
+</div>
+
+<div id="page-setup" class="page">
+  <div class="page-title">Setup / Config</div>
+  <div class="page-sub">Configure IP addresses to connect to hardware. No cloud or Pi needed</div>
+
+  <div class="conn-banner">
+    ℹ️ Both ESP32s serve data directly over WiFi. Open Serial Monitor in Arduino IDE to see the assigned IP after flashing.
+  </div>
+
+  <div class="g2" style="margin-bottom:.75rem">
+    <div class="card">
+      <div class="sec">📡 Room 1 — ESP32</div>
+      <label class="ip-lbl">ESP32 IP Address (Room 1)</label>
+      <div class="ip-form">
+        <input class="ip-inp" id="r1-ip-inp" type="text" placeholder="e.g. 192.168.1.100" value="">
+        <button class="btn primary" onclick="saveR1IP()">Save & Connect</button>
+      </div>
+      <div class="status-row">
+        <span class="status-lbl">Status</span>
+        <span class="status-val" id="r1-conn-status">Not configured</span>
+      </div>
+      <div class="status-row">
+        <span class="status-lbl">Sensors endpoint</span>
+        <span class="status-val sv-ok" id="r1-data-url" style="font-size:10px">—</span>
+      </div>
+      <div class="status-row">
+        <span class="status-lbl">Control endpoint</span>
+        <span class="status-val sv-ok" id="r1-cmd-url" style="font-size:10px">—</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec">📡 Room 2 — ESP32</div>
+      <label class="ip-lbl">ESP32 IP Address (Room 2 data)</label>
+      <div class="ip-form">
+        <input class="ip-inp" id="r2-ip-inp" type="text" placeholder="e.g. 192.168.1.101" value="">
+        <button class="btn primary" onclick="saveR2IP()">Save & Connect</button>
+      </div>
+      <div class="status-row">
+        <span class="status-lbl">Status</span>
+        <span class="status-val" id="r2-conn-status">Not configured</span>
+      </div>
+      <div class="status-row">
+        <span class="status-lbl">Sensors endpoint</span>
+        <span class="status-val sv-ok" id="r2-data-url" style="font-size:10px">—</span>
+      </div>
+      <div class="status-row">
+        <span class="status-lbl">Control endpoint</span>
+        <span class="status-val sv-ok" id="r2-cmd-url" style="font-size:10px">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2" style="margin-bottom:.75rem">
+    <div class="card">
+      <div class="sec">🎥 Live Camera — ESP32-CAM</div>
+      <label class="ip-lbl">Camera IP Address (Stream & Flash Control)</label>
+      <div class="ip-form">
+        <input class="ip-inp" id="cam-ip-inp" type="text" placeholder="e.g. 192.168.1.102" value="">
+        <button class="btn primary" onclick="saveCamIP()">Save & Connect</button>
+      </div>
+      <div class="status-row">
+        <span class="status-lbl">Status</span>
+        <span class="status-val" id="cam-conn-status">Not configured</span>
+      </div>
+      <div class="status-row">
+        <span class="status-lbl">Stream endpoint</span>
+        <span class="status-val sv-ok" id="cam-stream-url" style="font-size:10px">—</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+</div>
+
+<script>
+/* ── NAVIGATION ───────────────────────────────────── */
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if(el) el.classList.add('active');
+}
+
+/* ── CLOCK & DATE ─────────────────────────────────── */
+function updateTime() {
+  const n = new Date();
+  document.getElementById('clock').innerText = n.toLocaleTimeString('en-US',{hour12:false});
+  document.getElementById('ov-date').innerText = n.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+setInterval(updateTime, 1000); updateTime();
+
+/* ── CONFIG / IPs ─────────────────────────────────── */
+let r1IP = localStorage.getItem('r1IP') || '';
+let r2IP = localStorage.getItem('r2IP') || '';
+let camIP = localStorage.getItem('camIP') || ''; 
+
+window.onload = () => {
+  document.getElementById('r1-ip-inp').value = r1IP;
+  document.getElementById('r2-ip-inp').value = r2IP;
+  document.getElementById('cam-ip-inp').value = camIP;
+  
+  if (r1IP) updateR1Display();
+  if (r2IP) updateR2Display();
+  if (camIP) updateCamDisplay();
+  
+  if (r1IP || r2IP) hideBanner();
+  
+  startStream();
+  setInterval(fetchR1, 2000);
+  setInterval(fetchR2, 2000);
+};
+
+function saveR1IP() {
+  r1IP = document.getElementById('r1-ip-inp').value.trim();
+  localStorage.setItem('r1IP', r1IP);
+  updateR1Display(); hideBanner(); fetchR1();
+}
+function saveR2IP() {
+  r2IP = document.getElementById('r2-ip-inp').value.trim();
+  localStorage.setItem('r2IP', r2IP);
+  updateR2Display(); hideBanner(); fetchR2();
+}
+function saveCamIP() {
+  camIP = document.getElementById('cam-ip-inp').value.trim();
+  localStorage.setItem('camIP', camIP);
+  updateCamDisplay(); startStream();
+}
+
+function updateR1Display() {
+  document.getElementById('sb-r1-url').innerText = 'R1: ' + r1IP;
+  document.getElementById('r1-ip-disp').innerText = 'IP: ' + r1IP;
+  document.getElementById('r1-conn-status').innerText = 'Saved';
+  document.getElementById('r1-conn-status').className = 'status-val sv-ok';
+  document.getElementById('r1-data-url').innerText = `http://${r1IP}/data`;
+  document.getElementById('r1-cmd-url').innerText = `http://${r1IP}/cmd`;
+}
+function updateR2Display() {
+  document.getElementById('sb-r2-url').innerText = 'R2: ' + r2IP;
+  document.getElementById('r2-ip-disp').innerText = 'IP: ' + r2IP;
+  document.getElementById('r2-conn-status').innerText = 'Saved';
+  document.getElementById('r2-conn-status').className = 'status-val sv-ok';
+  document.getElementById('r2-data-url').innerText = `http://${r2IP}/data`;
+  document.getElementById('r2-cmd-url').innerText = `http://${r2IP}/cmd`;
+}
+function updateCamDisplay() {
+  document.getElementById('sb-cam-url').innerText = 'CAM: ' + camIP;
+  document.getElementById('cam-ip-disp').innerText = 'IP: ' + camIP;
+  document.getElementById('cam-conn-status').innerText = 'Saved';
+  document.getElementById('cam-conn-status').className = 'status-val sv-ok';
+  document.getElementById('cam-stream-url').innerText = `http://${camIP}:81/stream`;
+  document.getElementById('cam-ip-tag').innerText = `ESP32-CAM`;
+  document.getElementById('cam-url-disp').innerText = `http://${camIP}:81/stream`;
+}
+
+function startStream() {
+  const img1 = document.getElementById('cam-stream');
+  const img2 = document.getElementById('cam-preview');
+  if (camIP) {
+    const url = `http://${camIP}:81/stream`;
+    if (img1) { img1.src = url; img1.style.display = 'block'; }
+    if (img2) { img2.src = url; img2.style.display = 'block'; }
+    const off = document.getElementById('cam-off');
+    if (off) off.style.display = 'none';
+    const co = document.getElementById('cam-preview-off');
+    if (co) co.style.display = 'none';
+  }
+}
+
+/* ── CAMERA ACTIONS ───────────────────────────────── */
+function camFullscreen() {
+  const img = document.getElementById('cam-stream');
+  if (img.requestFullscreen) { img.requestFullscreen(); }
+  else if (img.webkitRequestFullscreen) { img.webkitRequestFullscreen(); }
+}
+
+function snapCam() {
+  if (camIP) window.open(`http://${camIP}/capture`, '_blank');
+  else alert("Please configure the Camera IP address first.");
+}
+
+/* ── COMMAND SENDER ───────────────────────────────── */
+function sendCmd(device, room, state) {
+  let ip = '';
+  if (room === 'r1') ip = r1IP;
+  else if (room === 'r2') ip = r2IP;
+  else if (room === 'cam') ip = camIP;
+
+  if (!ip) {
+    logEvent(room, 'control', `Failed: IP not set for ${device}`);
+    return;
+  }
+  
+  const payload = new URLSearchParams();
+  payload.append('device', device);
+  if (state !== undefined) payload.append('state', state ? '1' : '0');
+
+  fetch(`http://${ip}/cmd`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: payload.toString()
+  })
+  .then(r => r.text())
+  .then(t => {
+    logEvent(room, 'control', `CMD: ${device} -> ${state!==undefined?state:'trigger'} [${t}]`);
+  })
+  .catch(e => {
+    logEvent(room, 'alert', `CMD FAILED: ${device}`);
+  });
+}
+
+/* ── FETCH SENSOR DATA ──────────────────────────── */
+let r1Online = false, r2Online = false;
+
+function fetchR1() {
+  if (!r1IP) return;
+  fetch(`http://${r1IP}/data`, {signal: AbortSignal.timeout(3000)})
+    .then(r => r.json())
+    .then(d => { r1Online = true; updateR1(d); })
+    .catch(() => { r1Online = false; updateStatus('r1', false); });
+}
+
+function fetchR2() {
+  if (!r2IP) return;
+  fetch(`http://${r2IP}/data`, {signal: AbortSignal.timeout(3000)})
+    .then(r => r.json())
+    .then(d => { r2Online = true; updateR2(d); })
+    .catch(() => { r2Online = false; updateStatus('r2', false); });
+}
+
+/* ── UPDATE UI ──────────────────────────────────── */
+function setEl(id, val) { const e = document.getElementById(id); if(e) e.innerHTML = val; }
+function setVal(id, val) { const el = document.getElementById(id); if (el && el.type === 'checkbox') el.checked = !!val; }
+function hideBanner() { const b = document.getElementById('conn-banner'); if (b) b.style.display = 'none'; }
+
+function updateStatus(room, isOnline) {
+  const dot = document.getElementById(room + '-dot');
+  const ddot = document.getElementById(room === 'r1' ? 'd1-dot' : 'd2-dot');
+  const st = document.getElementById(room + '-status');
+  const bdg = document.getElementById(room + '-badge');
+  
+  if(isOnline) {
+    if(dot) dot.className = 'dot g';
+    if(ddot) ddot.style.background = 'var(--green)';
+    if(st) st.innerText = room.toUpperCase() + ' — online';
+    if(bdg) { bdg.className = 'badge ok'; bdg.innerText = 'Online'; }
+  } else {
+    if(dot) dot.className = 'dot r';
+    if(ddot) ddot.style.background = 'var(--red)';
+    if(st) st.innerText = room.toUpperCase() + ' — offline';
+    if(bdg) { bdg.className = 'badge err'; bdg.innerText = 'Offline'; }
+  }
+}
+
+function updateR1(d) {
+  updateStatus('r1', true);
+  // Optional logic for Room 1
+}
+
+function updateR2(d) {
+  updateStatus('r2', true);
+  setEl('r2-temp', d.temp + '°C'); setEl('ov-r2-temp', d.temp + '°C'); setEl('r2-temp-ov', d.temp + '°C');
+  setEl('r2-hum', d.hum + '%'); setEl('ov-r2-hum', d.hum + '%'); setEl('r2-hum-ov', d.hum + '%');
+  
+  setEl('r2-gas', d.gas);
+  const gbdg = document.getElementById('r2-gas-badge');
+  if(gbdg){ gbdg.className = d.gas>400?'badge err':'badge ok'; gbdg.innerText = d.gas>400?'Gas Alert':'Gas OK'; }
+  
+  const f = d.flame === 0;
+  setEl('r2-flame-lbl', f ? '<span style="color:var(--red)">DETECTED</span>' : '<span style="color:var(--green)">Clear</span>');
+  const fbdg = document.getElementById('r2-flame-badge');
+  if(fbdg){ fbdg.className = f?'badge err':'badge gray'; fbdg.innerText = f?'Flame!':'Flame —'; }
+  
+  const p = d.pir === 1;
+  setEl('r2-pir-lbl', p ? '<span style="color:var(--yellow)">Motion</span>' : '<span style="color:var(--txt3)">No motion</span>');
+  const pbdg = document.getElementById('r2-motion-badge');
+  if(pbdg){ pbdg.className = p?'badge warn':'badge gray'; pbdg.innerText = p?'Motion':'PIR —'; }
+  
+  const r = d.rain === 0;
+  setEl('r2-rain-lbl', r ? '<span style="color:var(--cyan)">Rain</span>' : '<span style="color:var(--green)">Dry</span>');
+  const rbdg = document.getElementById('r2-rain-badge');
+  if(rbdg){ rbdg.className = r?'badge info':'badge gray'; rbdg.innerText = r?'Rain':'Rain —'; }
+
+  // Checkboxes correctly mapped to the new relay variables
+  setVal('r2-sw1', d.rel1);
+  setVal('r2-sw2', d.rel2);
+  setVal('r2-sw3', d.rel3); // <--- NEW Smart Outlet mapped
+  setVal('r2-buzz', d.buzz);
+  setVal('r2-flash', d.flash); // <--- NEW Flash LED mapped
+
+  // Security Overview Updates
+  setEl('sec-flame', f ? '<span style="color:var(--red);font-weight:700">DETECTED (R2)</span>' : 'Clear');
+  setEl('sec-gas', d.gas>400 ? `<span style="color:var(--red);font-weight:700">ALERT (${d.gas})</span>` : 'Clear');
+  setEl('sec-pir', p ? '<span style="color:var(--yellow)">Motion (R2)</span>' : 'No motion');
+}
+
+/* ── EVENT LOGGING ──────────────────────────────── */
+let logs = [];
+function logEvent(room, cat, msg) {
+  logs.unshift({ time: Date.now(), room, cat, msg });
+  if (logs.length > 50) logs.pop();
+  renderLog();
+}
+function timeAgo(ms) {
+  const d = Date.now() - ms;
+  if (d < 60000) return 'just now';
+  if (d < 3600000) return Math.round(d/60000) + 'm ago';
+  return Math.round(d/3600000) + 'h ago';
+}
+function renderLog() {
+  const f = document.getElementById('log-filter')?.value || 'all';
+  const el = document.getElementById('log-container');
+  const items = f === 'all' ? logs : logs.filter(l =>
+    f === 'alert'    ? l.cat === 'alert' :
+    f === 'security' ? (l.msg.includes('NFC') || l.msg.includes('laser') || l.msg.includes('motion')) :
+    f === 'control'  ? l.cat === 'control' : true
+  );
+  if (!items.length) {
+    el.innerHTML = '<div style="color:var(--txt3);font-size:12px;padding:1rem;text-align:center">No events</div>';
+    return;
+  }
+  const ic = {r:'🔴',y:'🟡',g:'🟢',b:'🔵'};
+  const bg = {r:'rgba(239,68,68,.12)',y:'rgba(245,158,11,.12)',g:'rgba(16,185,129,.12)',b:'rgba(59,130,246,.12)'};
+  const tc = {r:'var(--red)',y:'var(--yellow)',g:'var(--green)',b:'var(--a2)'};
+  
+  el.innerHTML = items.map(l => {
+    let c = 'b';
+    if(l.cat === 'alert') c = 'r';
+    else if(l.cat === 'security') c = 'y';
+    
+    return `<div class="log-item">
+      <div class="log-ic" style="background:${bg[c]};color:${tc[c]}">${ic[c]}</div>
+      <div class="log-msg">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span><span class="log-room">[${l.room.toUpperCase()}]</span> ${l.msg}</span>
+          <span class="log-time">${timeAgo(l.time)}</span>
+        </div>
+        <div class="log-cat">${l.cat.toUpperCase()}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
